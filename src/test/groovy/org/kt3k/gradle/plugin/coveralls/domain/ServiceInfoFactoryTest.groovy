@@ -31,11 +31,37 @@ class ServiceInfoFactoryTest {
     @Test
     void testCreateFromEnvVarTravisPro() {
         // test the case of travis-pro
-        ServiceInfo serviceInfo = ServiceInfoFactory.createFromEnvVar TRAVIS: 'true', TRAVIS_JOB_ID: '12345678', COVERALLS_REPO_TOKEN: 'ABCDEF'
+        ServiceInfo serviceInfo = ServiceInfoFactory.createFromEnvVar(
+                TRAVIS: 'true',
+                TRAVIS_JOB_ID: '12345678',
+                COVERALLS_REPO_TOKEN: 'ABCDEF',
+                TRAVIS_PULL_REQUEST: '3232')
 
         assertEquals 'travis-pro', serviceInfo.serviceName
         assertEquals '12345678', serviceInfo.serviceJobId
         assertEquals 'ABCDEF', serviceInfo.repoToken
+
+        assertEquals '12345678', serviceInfo.environment['travis_job_id']
+        assertEquals '3232', serviceInfo.environment['travis_pull_request']
+    }
+
+
+    @Test
+    void testCreateFromEnvVarCircleci() {
+        // test the case of travis-pro
+        ServiceInfo serviceInfo = ServiceInfoFactory.createFromEnvVar(
+                CIRCLECI: 'true',
+                CIRCLE_BUILD_NUM: '12345678',
+                COVERALLS_REPO_TOKEN: 'ABCDEF',
+                CIRCLE_BRANCH: 'branchX',
+                CIRCLE_SHA1: '231asdfadsf424')
+
+        assertEquals 'circleci', serviceInfo.serviceName
+        assertEquals '12345678', serviceInfo.serviceNumber
+        assertEquals 'ABCDEF', serviceInfo.repoToken
+        assertEquals 'branchX', serviceInfo.environment['branch']
+        assertEquals '231asdfadsf424', serviceInfo.environment['commit_sha']
+        assertEquals '12345678', serviceInfo.environment['circleci_build_num']
     }
 
 
@@ -62,7 +88,13 @@ class ServiceInfoFactoryTest {
                 CI_PULL_REQUEST: 'pull_request',
         )
 
-        assert serviceInfo == new ServiceInfo('name', 'build_number', 'build_url', 'branch', 'pull_request', 'ABCDEF')
+        assertEquals serviceInfo, new ServiceInfo(
+                serviceName: 'name',
+                serviceNumber: 'build_number',
+                serviceBuildUrl: 'build_url',
+                serviceBranch: 'branch',
+                servicePullRequest: 'pull_request',
+                repoToken: 'ABCDEF')
     }
 
 }
